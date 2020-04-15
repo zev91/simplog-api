@@ -12,6 +12,7 @@ export interface IUserDocument extends Document {
   username: string,
   email: string,
   password: string,
+  verifycode: string,
   createAt: string,
   updateAt: string,
   _doc: IUserDocument,

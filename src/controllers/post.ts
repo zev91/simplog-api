@@ -38,6 +38,38 @@ export const getPosts = async (req: Request, res: Response, next: NextFunction):
   }
 };
 
+export const selfPosts = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { pageNO } = req.query;
+    const myCustomLabels = {
+      totalDocs: 'total',
+      docs: 'datas',
+      limit: 'pageSize',
+      page: 'currentPage',
+      // nextPage: false,
+      // prevPage: false,
+      totalPages: 'pageCount',
+      pagingCounter: false,
+      meta: 'page'
+    };
+
+    const options = {
+      page: +pageNO,
+      limit: 10,
+      customLabels: myCustomLabels
+    };
+    const user = req.currentUser as IUserDocument;
+
+    const posts = await Post.paginate({user: user.id},options);
+    res.json({
+      success: true,
+      data: posts
+    });
+  } catch (error) {
+    next(error)
+  }
+};
+
 export const getPost = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
@@ -94,13 +126,13 @@ export const updatePost = async (req: Request, res: Response, next: NextFunction
     const user = req.currentUser as IUserDocument;
 
     if (!post) throwPostNotFound(); 
-    if (post!.username !== user.username) throw new HttpException(UNAUTHORIZED, 'Action not allowed'); //文章的作者和当前用户是否为同一个
+    if (post!.username !== user.username) throw new HttpException(UNAUTHORIZED, '操作不允许！'); //文章的作者和当前用户是否为同一个
 
     checkPostContent(body,title);
     const resPost = await Post.findByIdAndUpdate(id, { body, title }, { new: true });
     res.json({
       success: true,
-      data: { message: 'Updated successfully', post: resPost }
+      data: { message: '更新成功！', post: resPost }
     });
   } catch (error) {
     next(error);
@@ -114,12 +146,12 @@ export const deletePost = async (req: Request, res: Response, next: NextFunction
     const user = req.currentUser as IUserDocument;
 
     if (!post) throwPostNotFound();
-    if (post!.username !== user.username) throw new HttpException(UNAUTHORIZED, 'Action not allowed'); //文章的作者和当前用户是否为同一个
+    if (post!.username !== user.username) throw new HttpException(UNAUTHORIZED, '操作不允许！'); //文章的作者和当前用户是否为同一个
 
     await Post.findByIdAndDelete(id);
     res.json({
       success: true,
-      data: { message: 'Delete successfully' }
+      data: { message: '删除成功！' }
     });
   } catch (error) {
     next(error);
