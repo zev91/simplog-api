@@ -16,14 +16,14 @@ const checkAuthMiddleware = async (req: Request, _res: Response, next: NextFunct
         req.currentUser = user;
         return next();
       } else {
-        return next(new HttpException(UNAUTHORIZED, 'no such user'))
+        return next(new HttpException(UNAUTHORIZED, '用户不存在！'))
       }
     } catch (error) {
-      return next(new HttpException(UNAUTHORIZED, 'Invalid/Expried token'))
+      return next(new HttpException(UNAUTHORIZED, '登录已过期，请重新登录！'))
     }
 
   }
-  return next(new HttpException(UNAUTHORIZED, 'Authorization token must be provied'))
+  return next(new HttpException(UNAUTHORIZED, '登录已过期，请重新登录！'))
 }
 
 export default checkAuthMiddleware;
