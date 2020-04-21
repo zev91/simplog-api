@@ -5,6 +5,8 @@ import HttpException from '../exceptions/HttpException';
 import User, { IUserDocument } from '../models/User';
 import VerifyCode from '../models/VerifyCode';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { JwtPayload } from '../types/Jwt';
 
 const throwLoginValidateError = (errors: LoginInputError) => {
   throw new HttpException(UNPROCESSABLE_ENTITY, 'User login input error', errors);
@@ -34,7 +36,6 @@ export const postLogin = async (req: Request, res: Response, next: NextFunction)
     }
 
     const token: string = user.generateToken();
-
     res.status(200).json({
       success: true,
       data: {
@@ -69,8 +70,6 @@ export const postRegister = async (req: Request, res: Response, next: NextFuncti
       throw new HttpException(UNPROCESSABLE_ENTITY, '验证码已过期，请重新获取！');;
     };
 
-    console.log('savedVerifyCode===>>>',savedVerifyCode)
-
     const newUser: IUserDocument = new User({
       username, email, password
     });
@@ -82,6 +81,34 @@ export const postRegister = async (req: Request, res: Response, next: NextFuncti
       success: true,
       data: {
         token
+      }
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+
+export const getUserInfo = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    let user;
+    const token = req.headers['authorization'];
+    if (token) {
+      await jwt.verify(token, process.env.JWT_SECRET_KEY!, async (_err,data) => {
+        console.log('data===>>>',data)
+        const jwtData = data as JwtPayload
+        if(data){
+          user = await User.findById(jwtData.id)
+        }
+      }) 
+    }
+
+    console.log({user,token})
+
+    res.status(200).json({
+      success: true,
+      data: {
+        user: user || {}
       }
     })
   } catch (error) {
