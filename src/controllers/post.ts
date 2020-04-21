@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { UNAUTHORIZED } from 'http-status-codes'
+import { UNAUTHORIZED } from 'http-status-codes';
+import { v4 as uuidv4 } from 'uuid';
 import Post from '../models/Post';
 import Like from '../models/Like';
 import Comment from '../models/Comment';
@@ -91,15 +92,37 @@ export const getPost = async (req: Request, res: Response, next: NextFunction): 
   }
 };
 
-export const createPosts = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getEditPost = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) throwPostNotFound(); //验证id格式
+
+    const post = await Post.findById(id);
+    if (!post) throwPostNotFound(); 
+
+    const user = req.currentUser as IUserDocument;
+    if (post!.username !== user.username) throw new HttpException(UNAUTHORIZED, '操作不允许！'); //文章的作者和当前用户是否为同一个
+
+    res.json({
+      success: true,
+      data: { post }
+    });
+  } catch (error) {
+    next(error)
+  }
+};
+
+export const createPost = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const user = req.currentUser as IUserDocument;
-    const { body, title } = req.body;
-    checkPostContent(body,title);
-
+    const { body, title, headerBg, status } = req.body;
+    // checkPostContent(body,title);
     const newPost = new Post({
+      postId: uuidv4(),
       title,
       body,
+      headerBg,
+      status,
       username: user.username,
       user: user.id
     });
@@ -110,7 +133,7 @@ export const createPosts = async (req: Request, res: Response, next: NextFunctio
       success: true,
       data: {
         message: 'create success',
-        post
+        id: post.id
       }
     });
   } catch (error) {

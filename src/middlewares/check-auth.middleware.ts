@@ -7,7 +7,6 @@ import { JwtPayload } from '../types/Jwt';
 
 const checkAuthMiddleware = async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
   const token = req.headers['authorization'];
-
   if (token) {
     try {
       const jwtData = jwt.verify(token, process.env.JWT_SECRET_KEY!) as JwtPayload;
