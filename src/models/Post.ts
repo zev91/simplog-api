@@ -10,31 +10,43 @@ export enum PostStatus {
 }
 
 export interface IPostDocument extends Document {
-  title: string;
-  status: PostStatus;
   postId: string;
+  status: PostStatus;
   headerBg: string;
+  title: string;
   body: string;
-  createAt: string;
+  category: string;
+  tags: string[];
   username: string;
-  user: IUserDocument['_id']
+  user: IUserDocument['_id'],
+  createdAt?: string,
+  updateAt?: string
 };
 
 interface IPostModel extends PaginateModel<IPostDocument> {};
 
 const PostSchema: Schema = new Schema({
-  title: String,
+  postId: String,
   status: { type: String, enum: ['DRAFT','RE_EDITOR','PUBLISHED'] }, 
+  headerBg: String,
+  title: String,
   body: String,
+  category: {
+    type: String,
+    default: ''
+  },
+  tags: {
+    type: [String],
+    default: []
+  },
   username: String,
-  createdAt: String,
-  updateAt: String,
   user: {
     type: Schema.Types.ObjectId,
     ref: 'users',
     required: true
   },
-  postId: String,
+  createdAt: String,
+  updateAt: String,
 }, {
   timestamps: true
 });

@@ -1,17 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import path from 'path';
-// import CO from 'co';
 import OSS from 'ali-oss';
-
-// import Post from '../models/Post';
-// import { IUserDocument } from '../models/User';
-// import { checkBody } from '../utils/validator';
-// import { throwPostNotFound } from '../utils/throwError';
-// import Comment from '../models/Comment';
-// import HttpException from '../exceptions/HttpException';
-// import { UNAUTHORIZED, NOT_FOUND } from 'http-status-codes';
-
 
 let client = new OSS({
   region: 'oss-cn-beijing',
@@ -23,8 +13,8 @@ let client = new OSS({
 
 export const uploadPic = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    let filePath =  req.file.path;  
-
+    let { imageType } = req.params;
+    let filePath =  req.file.path;                                                     
     let temp = req.file.originalname.split('.');
     let fileType = temp[temp.length - 1];
     let lastName = '.' + fileType;
@@ -40,7 +30,7 @@ export const uploadPic = async (req: Request, res: Response, next: NextFunction)
           data: { message: '写入文件失败！'}
         });
       }else{
-        const result = await client.put('images/'+fileName,newfilepath);
+        const result = await client.put(imageType + '/'+fileName,newfilepath);
         const { url, name } = result;
         fs.unlinkSync(newfilepath);
         res.json({
