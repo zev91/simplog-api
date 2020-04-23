@@ -19,17 +19,16 @@ import 'dotenv/config';
 
 import morgan from 'morgan';
 import helmet from 'helmet';
+import nocache from 'nocache';
 
 const app: Express  = express();
 const port: any = process.env.PORT || 9999;
 
 
-
-
-
 app.use(morgan('dev'));
 app.use(helmet());
 app.use(express.json());
+app.use(nocache());
 
 app.get('/',(_req: Request, res: Response) => {
   res.send('hello world');
@@ -40,7 +39,8 @@ app.post('/api/user/login', userController.postLogin);
 app.get('/api/userinfo',userController.getUserInfo);
 
 app.get('/api/posts',postController.getPosts);
-app.post('/api/createPost',checkAuthMiddleware,postController.createPost)
+app.post('/api/createPost',checkAuthMiddleware,postController.createPost);
+app.post('/api/publishPost/:id',checkAuthMiddleware,postController.publishPost);
 
 app.route('/api/posts/:id')
 .get(postController.getPost)
@@ -58,7 +58,7 @@ app.delete('/api/posts/:id/comment/:commentId',checkAuthMiddleware,commentContro
 
 app.post('/api/email',sendMailController.sendMail);
 
-app.post('/api/upload',uploadCreater(),fileController.uploadPic);
+app.post('/api/upload/:imageType',uploadCreater(),fileController.uploadPic);
 
 app.use((_req: Request, _res: Response, next:NextFunction) => {
   const error: HttpException = new HttpException(NOT_FOUND, 'Router Not Found');

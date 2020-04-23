@@ -82,7 +82,7 @@ export const checkEmail= (email:string) => {
   };
 }
 
-export const checkPostContent = (body:string, title:string) => {
+export const checkPostContent = (body:string, title:string, category:string, tags:string[],) => {
   let errorBody:string[] = [];
   if(isEmpty(body.trim())){
     errorBody.push('内容')
@@ -90,6 +90,12 @@ export const checkPostContent = (body:string, title:string) => {
 
   if(isEmpty(title.trim())){
     errorBody.push('标题')
+  };
+  if(isEmpty(category.trim())){
+    errorBody.push('类别')
+  };
+  if(!tags.length){
+    errorBody.push('标签')
   };
 
   if (errorBody.length) {
