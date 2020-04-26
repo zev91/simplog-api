@@ -29,7 +29,7 @@ export const getPosts = async (req: Request, res: Response, next: NextFunction):
       limit: 10,
       customLabels: myCustomLabels
     };
-    const posts = await Post.paginate({},options);
+    const posts = await Post.paginate({status: PostStatus.PUBLISHED},options);
     res.json({
       success: true,
       data: posts

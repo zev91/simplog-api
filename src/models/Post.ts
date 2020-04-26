@@ -19,8 +19,8 @@ export interface IPostDocument extends Document {
   tags: string[];
   username: string;
   user: IUserDocument['_id'],
-  createdAt?: string,
-  updateAt?: string
+  createdAt?: Date,
+  updateAt?: Date
 };
 
 interface IPostModel extends PaginateModel<IPostDocument> {};
@@ -45,8 +45,8 @@ const PostSchema: Schema = new Schema({
     ref: 'users',
     required: true
   },
-  createdAt: String,
-  updateAt: String,
+  createdAt: Date,
+  updateAt: Date,
 }, {
   timestamps: true
 });
