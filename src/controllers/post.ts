@@ -3,7 +3,6 @@ import { UNAUTHORIZED } from 'http-status-codes';
 import { v4 as uuidv4 } from 'uuid';
 import Post, { PostStatus, IPostDocument } from '../models/Post';
 import Like from '../models/Like';
-import Comment from '../models/Comment';
 import HttpException from '../exceptions/HttpException';
 import { IUserDocument } from '../models/User';
 import { checkPostContent } from '../utils/validator';
@@ -79,13 +78,9 @@ export const getPost = async (req: Request, res: Response, next: NextFunction): 
     const post = await Post.findById(id);
     if (!post) throwPostNotFound(); 
 
-    const comment =  await Comment.find({
-      post: id
-    });
-
     res.json({
       success: true,
-      data: { post, comments: comment }
+      data: { post }
     });
   } catch (error) {
     next(error)

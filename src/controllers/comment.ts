@@ -19,11 +19,19 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
     const post = await Post.findById(id);
     if (!post) throwPostNotFound();
 
+    // console.log('post!.user.id====>>>>',post!.user);
+    // console.log('user====>>>>',user.id );
+
+    //     console.log(post!.user == user.id )
+    // console.log('typeof post!.user===>>>>',typeof post!.user )
+    // console.log('typeof user===>>>',typeof user )
+
     let commentContents: IComments = {
       username: user.username,
       user,
       body,
-      post
+      post,
+      isAuthor: post!.user == user.id
     };
 
     if (parentId) {
@@ -39,114 +47,77 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
     const newComment = new Comment(commentContents);
     await newComment.save();
 
-    const resCom = await Comment.aggregate([
-      {
-        $match: {
-          "parentId": null,
-          "post": post!._id
-        }
-      },
-      {
-        $graphLookup: {
-          from: "comments",
-          startWith: "$_id",
-          connectFromField: "_id",
-          connectToField: "parentId",
-          as: "children"
-        }
-      },
-      {
-        $unwind: "$children"
-      },
-      {
-        $sort: {
-          "children.createdAt": -1
-        }
-      },
-      {
-        $group: {
-          _id: {
-            _id: "$_id",
-            likeCount: "$likeCount",
-            username: "$username",
-            user: "$user",
-            body: "$body",
-            post: "$post",
-            createdAt: "$createdAt",
-            updatedAt: "$updatedAt",
-          },
-          children: {
-            $push: "$children"
-          }
-        }
-      },
-      {
-        $project: {
-          "_id": "$_id._id",
-          "likeCount": "$_id.likeCount",
-          "username": "$_id.username",
-          "user": "$_id.user",
-          "body": "$_id.body",
-          "post": "$_id.post",
-          "createdAt": "$_id.createdAt",
-          "updatedAt": "$_id.updatedAt",
-          "children": "$children"
-        }
-      },
-      {
-        $sort: {
-          createdAt: -1
-        }
-      },
-    ])
 
     res.json({
       success: true,
-      data: { message: '评论成功！', resCom }
+      data: { message: '评论成功！' }
     });
   } catch (error) {
     next(error)
   }
 };
 
-// export const getComment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-//   try {
-//     const user = req.currentUser as IUserDocument;
-//     const { body, parentId } = req.body;
-//     const { id } = req.params;
-//     checkBody(body);
 
-//     const post = await Post.findById(id);
-//     if(!post) throwPostNotFound(); 
 
-//     let commentContents: IComments = {
-//       username: user.username,
-//       user,
-//       body,
-//       post
-//     };
+export const getComment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
 
-//     if(parentId){
-//       const comment = await Comment.findOne({parentId});
-//       if(!comment) throwCommentNotFound(); 
+    const { id } = req.params;
 
-//       commentContents = {
-//         ...commentContents,
-//         parentId
-//       }
-//     }
+    const post = await Post.findById(id);
+    if(!post) throwPostNotFound(); 
 
-//     const newComment= new Comment(commentContents);
-//     await newComment.save();
+    let comments = await Comment.find({"parentId": null, "post": post!._id});
 
-//     res.json({
-//       success: true,
-//       data: { message: '评论成功！'}
-//     });
-//   } catch (error) {
-//     next(error)
-//   }
-// };
+    for(let i = 0; i < comments.length; i++){
+      let children =  await Comment.find({"parentId": comments[i].id, "post": post!._id});
+      comments[i]['children'] = children;
+    }
+
+
+    // const comments = await Comment.aggregate([
+    //   {
+    //     $match: {
+    //       "parentId": null,
+    //       "post": post!._id
+    //     }
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "comments",
+    //       let: {
+    //         id_item: "$id"
+    //       },
+    //       pipeline: [
+    //         {
+    //           $match: {
+    //             parentId: {$exists: true}
+    //           }
+    //         },
+    //         {
+    //           $sort: {
+    //             createdAt: -1
+    //           }
+    //         }
+    //       ],
+    //       as: "children"
+    //     }
+    //   },
+    //   {
+    //     $sort: {
+    //       createdAt: -1
+    //     }
+    //   }
+    // ]);
+
+    res.json({
+      success: true,
+      data: { comments}
+    });
+  } catch (error) {
+    next(error)
+  }
+};
 
 export const deleteComment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
