@@ -53,6 +53,7 @@ app.get('/api/posts-self',checkAuthMiddleware,postController.selfPosts);
 
 app.post('/api/posts/:id/like',checkAuthMiddleware,postController.likePost);
 
+app.get('/api/posts/:id/comment',commentController.getComment);
 app.post('/api/posts/:id/comment',checkAuthMiddleware,commentController.createComment);
 app.delete('/api/posts/:id/comment/:commentId',checkAuthMiddleware,commentController.deleteComment);
 

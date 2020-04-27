@@ -39,7 +39,7 @@ const PostSchema: Schema = new Schema({
     type: [String],
     default: []
   },
-  username: String,
+
   user: {
     type: Schema.Types.ObjectId,
     ref: 'users',

@@ -9,6 +9,7 @@ export interface IComments {
   parentId?: ICommentsDocument['_id'];
   children?: ICommentsDocument[];
   likeCount?: number;
+  isAuthor?:boolean;
   user: IUserDocument['_id']
   post: IPostDocument['_id']
 }
@@ -19,6 +20,7 @@ export interface ICommentsDocument extends Document{
   parentId?: ICommentsDocument['_id'];
   children?: ICommentsDocument[];
   likeCount?: number;
+  isAuthor?: boolean;
   user: IUserDocument['_id']
   post: IPostDocument['_id']
 }
@@ -39,6 +41,10 @@ const CommentsSchema: Schema = new Schema({
   likeCount: {
     type: Number,
     default: 0
+  },
+  isAuthor: {
+    type: Boolean,
+    default: false
   },
   user: {
     type: Schema.Types.ObjectId,

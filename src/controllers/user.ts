@@ -93,17 +93,14 @@ export const getUserInfo = async (req: Request, res: Response, next: NextFunctio
   try {
     let user;
     const token = req.headers['authorization'];
-    if (token) {
+    if (token && token !== 'undefined') {
       await jwt.verify(token, process.env.JWT_SECRET_KEY!, async (_err,data) => {
-        console.log('data===>>>',data)
         const jwtData = data as JwtPayload
         if(data){
           user = await User.findById(jwtData.id)
         }
       }) 
     }
-
-    console.log({user,token})
 
     res.status(200).json({
       success: true,
