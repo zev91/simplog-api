@@ -2,31 +2,27 @@ import { Schema, model, Document} from 'mongoose';
 import { IUserDocument } from './User';
 import { IPostDocument } from './Post';
 
-export interface ILike extends Document{
-  username: string;
-  user: IUserDocument['_id']
-  postTitle: string;
-  post: IPostDocument['_id']
+export interface ILikePost extends Document{
+  user: IUserDocument['_id'];
+  post: IPostDocument['_id'];
 }
 
-const LikeSchema: Schema = new Schema({
-  username: String,
+const LikePostSchema: Schema = new Schema({
   user: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  postTitle: String, 
+
   post: {
     type: Schema.Types.ObjectId,
     ref: 'Post',
     required: true
-  },
-
+  }
 },{
   timestamps: true
 });
 
-const Like = model<ILike>('Like', LikeSchema);
+const Like = model<ILikePost>('LikePost', LikePostSchema);
 
 export default Like;

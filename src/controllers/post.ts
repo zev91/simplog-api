@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import { UNAUTHORIZED } from 'http-status-codes';
 import { v4 as uuidv4 } from 'uuid';
 import Post, { PostStatus, IPostDocument } from '../models/Post';
-import Like from '../models/Like';
 import HttpException from '../exceptions/HttpException';
 import { IUserDocument } from '../models/User';
 import { checkPostContent } from '../utils/validator';
@@ -264,41 +263,3 @@ export const deletePost = async (req: Request, res: Response, next: NextFunction
     next(error);
   }
 };
-
-export const likePost = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { id } = req.params;
-    const post = await Post.findById(id);
-    const user = req.currentUser as IUserDocument;
-
-    if (!post) throwPostNotFound(); 
-
-    const like =  await Like.findOne({
-      user: user,
-      post: id
-    });
-
-    if(like){
-      await Like.findByIdAndDelete(like.id);
-    }else{
-      const newLike= new Like({
-        username: user.username,
-        user,
-        postTitle: post!.title,
-        post,
-      });
-      await newLike.save();
-    }
-
-    const likes = await Like.find({
-      post: id
-    });
-
-    res.json({
-      success: true,
-      data: { post, likes, liked: !like}
-    });
-  } catch (error) {
-    next(error);
-  }
-}
