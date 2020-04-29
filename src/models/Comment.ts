@@ -4,31 +4,30 @@ import { IPostDocument } from './Post';
 import mongoosePaginate from 'mongoose-paginate-v2';
 
 export interface IComments {
-  username: string;
   body: string;
   parentId?: ICommentsDocument['_id'];
   children?: ICommentsDocument[];
   likeCount?: number;
   isAuthor?:boolean;
-  user: IUserDocument['_id']
-  post: IPostDocument['_id']
+  fromUser: IUserDocument['_id'];
+  replyToUser?: IUserDocument['_id'];
+  post: IPostDocument['_id'];
 }
 
 export interface ICommentsDocument extends Document{
-  username: string;
   body: string;
   parentId?: ICommentsDocument['_id'];
   children?: ICommentsDocument[];
   likeCount?: number;
   isAuthor?: boolean;
-  user: IUserDocument['_id']
-  post: IPostDocument['_id']
+  fromUser: IUserDocument['_id'];
+  replyToUser?: IUserDocument['_id'];
+  post: IPostDocument['_id'];
 }
 
 interface ICommentsModel extends PaginateModel<ICommentsDocument> {};
 
 const CommentsSchema: Schema = new Schema({
-  username: String,
   body: String,
   parentId: {
     type: Schema.Types.ObjectId,
@@ -46,14 +45,19 @@ const CommentsSchema: Schema = new Schema({
     type: Boolean,
     default: false
   },
-  user: {
+
+  fromUser: {
     type: Schema.Types.ObjectId,
-    ref: 'users',
+    ref: 'User',
     required: true
+  },
+  replyToUser: {
+    type: Schema.Types.ObjectId,
+    ref: 'User'
   },
   post: {
     type: Schema.Types.ObjectId,
-    ref: 'posts',
+    ref: 'Post',
     required: true
   }
 },{timestamps: true});

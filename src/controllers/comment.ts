@@ -12,23 +12,15 @@ import { UNAUTHORIZED, NOT_FOUND } from 'http-status-codes';
 export const createComment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const user = req.currentUser as IUserDocument;
-    const { body, parentId } = req.body;
+    const { body, parentId, replyId } = req.body;
     const { id } = req.params;
     checkBody(body);
 
     const post = await Post.findById(id);
     if (!post) throwPostNotFound();
 
-    // console.log('post!.user.id====>>>>',post!.user);
-    // console.log('user====>>>>',user.id );
-
-    //     console.log(post!.user == user.id )
-    // console.log('typeof post!.user===>>>>',typeof post!.user )
-    // console.log('typeof user===>>>',typeof user )
-
     let commentContents: IComments = {
-      username: user.username,
-      user,
+      fromUser:user,
       body,
       post,
       isAuthor: post!.user == user.id
@@ -41,6 +33,13 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
       commentContents = {
         ...commentContents,
         parentId
+      }
+    }
+
+    if(replyId){
+      commentContents = {
+        ...commentContents,
+        replyToUser: replyId
       }
     }
 
@@ -61,55 +60,16 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
 
 export const getComment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-
     const { id } = req.params;
-
     const post = await Post.findById(id);
     if(!post) throwPostNotFound(); 
 
-    let comments = await Comment.find({"parentId": null, "post": post!._id});
+    let comments = await Comment.find({"parentId": null, "post": post!._id}).sort({createdAt: -1}).populate('fromUser','_id username');
 
     for(let i = 0; i < comments.length; i++){
-      let children =  await Comment.find({"parentId": comments[i].id, "post": post!._id});
+      let children =  await Comment.find({"parentId": comments[i].id, "post": post!._id}).sort({createdAt: -1}).populate('fromUser','_id username').populate('replyToUser','_id username');
       comments[i]['children'] = children;
     }
-
-
-    // const comments = await Comment.aggregate([
-    //   {
-    //     $match: {
-    //       "parentId": null,
-    //       "post": post!._id
-    //     }
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: "comments",
-    //       let: {
-    //         id_item: "$id"
-    //       },
-    //       pipeline: [
-    //         {
-    //           $match: {
-    //             parentId: {$exists: true}
-    //           }
-    //         },
-    //         {
-    //           $sort: {
-    //             createdAt: -1
-    //           }
-    //         }
-    //       ],
-    //       as: "children"
-    //     }
-    //   },
-    //   {
-    //     $sort: {
-    //       createdAt: -1
-    //     }
-    //   }
-    // ]);
-
     res.json({
       success: true,
       data: { comments}
@@ -121,15 +81,17 @@ export const getComment = async (req: Request, res: Response, next: NextFunction
 
 export const deleteComment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { id, commentId } = req.params;
-    const post = await Post.findById(id);
+    const { commentId } = req.params;
     const user = req.currentUser as IUserDocument;
     const comment = await Comment.findById(commentId);
 
-    if (!post) throwPostNotFound();
     if (!comment) throw new HttpException(NOT_FOUND, '评论不存在！');;
 
-    if (comment.username !== user.username) throw new HttpException(UNAUTHORIZED, '操作不允许！'); //文章的作者和当前用户是否为同一个
+    if (comment.fromUser+'' !== user._id+'') throw new HttpException(UNAUTHORIZED, '操作不允许！'); //文章的作者和当前用户是否为同一个
+  
+    if(comment!.children!.length > 0){
+      await Comment.deleteMany({parentId:commentId});
+    }
 
     await Comment.findByIdAndDelete(commentId);
     res.json({
@@ -137,6 +99,7 @@ export const deleteComment = async (req: Request, res: Response, next: NextFunct
       data: { message: '删除成功！' }
     });
   } catch (error) {
+    console.log(error)
     next(error);
   }
 };
