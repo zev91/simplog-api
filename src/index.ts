@@ -8,10 +8,10 @@ import * as postController from './controllers/Post';
 import * as commentController from './controllers/Comment';
 import * as sendMailController from './controllers/sendMail';
 import * as fileController from './controllers/file';
+import * as likePostController from './controllers/likePost';
 
 import errorMiddleeare from './middlewares/error.middleware';
 import checkAuthMiddleware from './middlewares/check-auth.middleware';
-// import uploadMiddleware from './middlewares/upload-midleware';
 
 import uploadCreater from './utils/uploadFileCreater'
 
@@ -51,7 +51,8 @@ app.get('/api/getEditPost/:id',checkAuthMiddleware,postController.getEditPost);
 
 app.get('/api/posts-self',checkAuthMiddleware,postController.selfPosts);
 
-app.post('/api/posts/:id/like',checkAuthMiddleware,postController.likePost);
+app.post('/api/likePost/:id',checkAuthMiddleware,likePostController.changeLike);
+app.get('/api/getPostLikers/:id',likePostController.getPostLikers);
 
 app.get('/api/posts/:id/comment',commentController.getComment);
 app.post('/api/posts/:id/comment',checkAuthMiddleware,commentController.createComment);
