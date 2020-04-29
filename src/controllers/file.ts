@@ -30,9 +30,12 @@ export const uploadPic = async (req: Request, res: Response, next: NextFunction)
           data: { message: '写入文件失败！'}
         });
       }else{
+        console.log('before upload===>>>')
         const result = await client.put(imageType + '/'+fileName,newfilepath);
+        console.log('after aliyun  upload===>>>')
         const { url, name } = result;
         fs.unlinkSync(newfilepath);
+        console.log('after upload===>>>')
         res.json({
           success: true,
           data: { message: '上传成功！', url, name}

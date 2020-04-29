@@ -10,7 +10,8 @@ const checkAuthMiddleware = async (req: Request, _res: Response, next: NextFunct
   if (token) {
     try {
       const jwtData = jwt.verify(token, process.env.JWT_SECRET_KEY!) as JwtPayload;
-      const user = await User.findById(jwtData.id)
+      const user = await User.findById(jwtData.id);
+      
       if (user) {
         req.currentUser = user;
         return next();
@@ -20,7 +21,6 @@ const checkAuthMiddleware = async (req: Request, _res: Response, next: NextFunct
     } catch (error) {
       return next(new HttpException(UNAUTHORIZED, '登录已过期，请重新登录！'))
     }
-
   }
   return next(new HttpException(UNAUTHORIZED, '登录已过期，请重新登录！'))
 }

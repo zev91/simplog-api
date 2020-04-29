@@ -241,6 +241,7 @@ export const publishPost = async (req: Request, res: Response, next: NextFunctio
       data: { message: `${post!.status === 'DRAFT' ? '发布' : '更新'}成功！`, postId: id }
     });
   } catch (error) {
+    console.log(error)
     next(error);
   }
 };

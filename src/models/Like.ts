@@ -13,13 +13,13 @@ const LikeSchema: Schema = new Schema({
   username: String,
   user: {
     type: Schema.Types.ObjectId,
-    ref: 'users',
+    ref: 'User',
     required: true
   },
   postTitle: String, 
   post: {
     type: Schema.Types.ObjectId,
-    ref: 'posts',
+    ref: 'Post',
     required: true
   },
 
