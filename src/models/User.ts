@@ -13,8 +13,6 @@ export interface IUserDocument extends Document {
   email: string,
   password: string,
   verifycode: string,
-  createAt: string,
-  updateAt: string,
   _doc: IUserDocument,
   role: Role,
   generateToken: () => string
@@ -35,11 +33,24 @@ const userSchema: Schema = new Schema({
   uuid: {
     type: String,
     default: uuidv4()
-
   },
   password: String,
-  createAt: String,
-  updateAt: String,
+  avatar: {
+    type: String,
+    default: ''
+  },
+  jobTitle: {
+    type: String,
+    default: ''
+  },
+  company: {
+    type: String,
+    default: ''
+  },
+  selfDescription: {
+    type: String,
+    default: ''
+  }
 },{
   timestamps: true
 });

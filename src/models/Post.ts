@@ -17,8 +17,8 @@ export interface IPostDocument extends Document {
   body: string;
   category: string;
   tags: string[];
-  username: string;
-  user: IUserDocument['_id'],
+  author: IUserDocument['_id'],
+  read: number,
   createdAt?: Date,
   updateAt?: Date
 };
@@ -39,11 +39,14 @@ const PostSchema: Schema = new Schema({
     type: [String],
     default: []
   },
-  username: String,
-  user: {
+  author: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
+  },
+  read: {
+    type: Number,
+    default: 0
   },
   createdAt: Date,
   updateAt: Date,
