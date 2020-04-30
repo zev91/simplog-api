@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { UNAUTHORIZED } from 'http-status-codes';
 import { v4 as uuidv4 } from 'uuid';
 import Post, { PostStatus, IPostDocument } from '../models/Post';
+import LikePost, { ILikePost } from '../models/LikePost';
+// import LikePost from './models/LikePost';
 import HttpException from '../exceptions/HttpException';
 import { IUserDocument } from '../models/User';
 import { checkPostContent } from '../utils/validator';
@@ -74,12 +76,32 @@ export const getPost = async (req: Request, res: Response, next: NextFunction): 
     const { id } = req.params;
     if (!id.match(/^[0-9a-fA-F]{24}$/)) throwPostNotFound(); //验证id格式
 
-    const post = await Post.findById(id);
+    const post:IPostDocument | null = await Post.findById(id).populate('author','_id username avatar jobTitle selfDescription');
     if (!post) throwPostNotFound(); 
+
+    await Post.findByIdAndUpdate(id,{read:post!.read+1});
+    const totalPosts = await Post.find({author: post!.author});
+    const totalReads = totalPosts.reduce((cur,nex) => cur+nex!.read,0);
+
+    let totalLikes: ILikePost[] = [];
+
+    const calculateLikes = totalPosts.map(async post => {
+      const likes = await LikePost.find({post:post._id});
+      totalLikes = [...totalLikes,...likes];
+    });
+    
+    await Promise.all(calculateLikes);
+ 
+    const resPost = JSON.parse(JSON.stringify(post)) ;
+    resPost.author = {
+      ...resPost.author,
+      totalReads,
+      totalLikes: totalLikes.length
+    }
 
     res.json({
       success: true,
-      data: { post }
+      data: { post:resPost }
     });
   } catch (error) {
     next(error)
@@ -94,8 +116,8 @@ export const getEditPost = async (req: Request, res: Response, next: NextFunctio
     let post = await Post.findById(id);
     if (!post) throwPostNotFound(); 
 
-    const user = req.currentUser as IUserDocument;
-    if (post!.username !== user.username) throw new HttpException(UNAUTHORIZED, '操作不允许！'); //文章的作者和当前用户是否为同一个
+    const userId:IUserDocument['_id'] | undefined = req.currentUser!._id;
+    if (''+post!.author !== ''+userId) throw new HttpException(UNAUTHORIZED, '操作不允许！'); //文章的作者和当前用户是否为同一个
 
     if(post!.status === PostStatus.PUBLISHED){
       const rePublishPost = await Post.findOne({postId: post!.postId, status: PostStatus.RE_EDITOR});
@@ -107,8 +129,7 @@ export const getEditPost = async (req: Request, res: Response, next: NextFunctio
           body, 
           category,
           tags, 
-          username, 
-          user, 
+          author:userId, 
           createdAt
         } = post as IPostDocument;
         
@@ -120,8 +141,7 @@ export const getEditPost = async (req: Request, res: Response, next: NextFunctio
           body, 
           category,
           tags, 
-          username, 
-          user, 
+          author:userId, 
           createdAt
         });
     
@@ -159,8 +179,7 @@ export const createPost = async (req: Request, res: Response, next: NextFunction
       body, 
       category,
       tags, 
-      username: user.username,
-      user: user.id
+      author: user._id
     });
 
     const post = await newPost.save();
@@ -182,10 +201,11 @@ export const updatePost = async (req: Request, res: Response, next: NextFunction
     const { id } = req.params;
     const { body, title, headerBg, tags, category } = req.body;
     const post = await Post.findById(id);
-    const user = req.currentUser as IUserDocument;
+    const userId:IUserDocument['_id'] | undefined = req.currentUser!._id;
     
     if (!post) throwPostNotFound(); 
-    if (post!.username !== user.username) throw new HttpException(UNAUTHORIZED, '操作不允许！'); //文章的作者和当前用户是否为同一个
+
+    if (''+post!.author !== ''+userId) throw new HttpException(UNAUTHORIZED, '操作不允许！'); //文章的作者和当前用户是否为同一个
     if(post!.status === PostStatus.PUBLISHED){
       await Post.findOneAndUpdate({
         postId: post!.postId, 
@@ -213,10 +233,10 @@ export const publishPost = async (req: Request, res: Response, next: NextFunctio
     const { body, title, tags, category } = req.body;
     const { id } = req.params;
     const post = await Post.findById(id);
-    const user = req.currentUser as IUserDocument;
+    const userId:IUserDocument['_id'] | undefined = req.currentUser!._id;
     
     if (!post) throwPostNotFound(); 
-    if (post!.username !== user.username) throw new HttpException(UNAUTHORIZED, '操作不允许！'); //文章的作者和当前用户是否为同一个
+    if (''+post!.author !== ''+userId) throw new HttpException(UNAUTHORIZED, '操作不允许！'); //文章的作者和当前用户是否为同一个
 
     checkPostContent(body,title, category, tags);
     if(post!.status === 'DRAFT'){
@@ -249,10 +269,10 @@ export const deletePost = async (req: Request, res: Response, next: NextFunction
   try {
     const { id } = req.params;
     const post = await Post.findById(id);
-    const user = req.currentUser as IUserDocument;
+    const userId:IUserDocument['_id'] | undefined = req.currentUser!._id;
 
     if (!post) throwPostNotFound();
-    if (post!.username !== user.username) throw new HttpException(UNAUTHORIZED, '操作不允许！'); //文章的作者和当前用户是否为同一个
+    if (''+post!.author !== ''+userId) throw new HttpException(UNAUTHORIZED, '操作不允许！'); //文章的作者和当前用户是否为同一个
 
     await Post.findByIdAndDelete(id);
     res.json({

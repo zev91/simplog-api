@@ -11,7 +11,7 @@ import { UNAUTHORIZED, NOT_FOUND } from 'http-status-codes';
 
 export const createComment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const user = req.currentUser as IUserDocument;
+    const userId:IUserDocument['_id'] | undefined = req.currentUser!._id;
     const { body, parentId, replyId } = req.body;
     const { id } = req.params;
     checkBody(body);
@@ -20,10 +20,10 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
     if (!post) throwPostNotFound();
 
     let commentContents: IComments = {
-      fromUser:user,
+      fromUser:userId,
       body,
       post,
-      isAuthor: post!.user == user.id
+      isAuthor: ''+post!.author == ''+userId
     };
 
     if (parentId) {
@@ -82,12 +82,12 @@ export const getComment = async (req: Request, res: Response, next: NextFunction
 export const deleteComment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { commentId } = req.params;
-    const user = req.currentUser as IUserDocument;
+    const userId:IUserDocument['_id'] | undefined = req.currentUser!._id;
     const comment = await Comment.findById(commentId);
 
     if (!comment) throw new HttpException(NOT_FOUND, '评论不存在！');;
 
-    if (comment.fromUser+'' !== user._id+'') throw new HttpException(UNAUTHORIZED, '操作不允许！'); //文章的作者和当前用户是否为同一个
+    if (comment.fromUser+'' !== userId+'') throw new HttpException(UNAUTHORIZED, '操作不允许！'); //文章的作者和当前用户是否为同一个
   
     if(comment!.children!.length > 0){
       await Comment.deleteMany({parentId:commentId});

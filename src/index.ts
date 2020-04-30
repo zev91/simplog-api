@@ -9,6 +9,8 @@ import * as commentController from './controllers/Comment';
 import * as sendMailController from './controllers/sendMail';
 import * as fileController from './controllers/file';
 import * as likePostController from './controllers/likePost';
+import * as collectionController from './controllers/collection';
+import * as folloowController from './controllers/follow';
 
 import errorMiddleeare from './middlewares/error.middleware';
 import checkAuthMiddleware from './middlewares/check-auth.middleware';
@@ -53,6 +55,13 @@ app.get('/api/posts-self',checkAuthMiddleware,postController.selfPosts);
 
 app.post('/api/likePost/:id',checkAuthMiddleware,likePostController.changeLike);
 app.get('/api/getPostLikers/:id',likePostController.getPostLikers);
+
+app.post('/api/collectionPost/:id',checkAuthMiddleware,collectionController.changeCollection);
+app.get('/api/hasCollectioned/:id',collectionController.hasCollectioned);
+
+app.post('/api/follow/:userId',checkAuthMiddleware,folloowController.changeFollow);
+app.get('/api/hasFollowedAuthor/:postId',folloowController.hasFollowedAuther);
+app.get('/api/hasFollowedUser/:userId',folloowController.hasFollowedUser);
 
 app.get('/api/posts/:id/comment',commentController.getComment);
 app.post('/api/posts/:id/comment',checkAuthMiddleware,commentController.createComment);
