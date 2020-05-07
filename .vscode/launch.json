@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+      {
+          "type": "node",
+          "request": "launch",
+          "name": "Launch Program",
+          "runtimeExecutable": "npm",
+          "runtimeArgs": [
+              "run",
+              "debug"
+          ],
+          "cwd": "${workspaceRoot}/src",
+          "port": 9999,
+         "console":"internalConsole",
+          "sourceMaps": true
+      }
+  ]
+}

@@ -8,10 +8,11 @@ import HttpException from '../exceptions/HttpException';
 import { IUserDocument } from '../models/User';
 import { checkPostContent } from '../utils/validator';
 import { throwPostNotFound } from '../utils/throwError';
+import Comment from '../models/Comment';
 
 export const getPosts = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { pageNO } = req.query;
+    const { pageNo } = req.query;
     const myCustomLabels = {
       totalDocs: 'total',
       docs: 'datas',
@@ -25,15 +26,39 @@ export const getPosts = async (req: Request, res: Response, next: NextFunction):
     };
 
     const options = {
-      page: +pageNO,
-      limit: 10,
-      customLabels: myCustomLabels
+      select: '_id category tags read postId title author createdAt headerBg',
+      page: +pageNo || 1,
+      limit: 15,
+      lean:true,
+      sort: { createdAt:-1 },
+      customLabels: myCustomLabels,
+      populate: {
+        path: 'author',
+        select: '_id username avatar'
+      }
     };
-    const posts = await Post.paginate({status: PostStatus.PUBLISHED},options);
+
+    let posts = await Post.paginate({status: PostStatus.PUBLISHED},options);
+    let datas = posts.datas as IPostDocument[];
+
+    const fillPosts =  datas.map(async (post:IPostDocument) => {
+      const likes = await LikePost.find({post:post._id});
+      const comments = await Comment.find({post:post._id});
+      return ({
+        ...post,
+        likes: likes.length,
+        comments: comments.length
+      })
+    });
+
+
+    const newPosts = await Promise.all(fillPosts);
+
     res.json({
       success: true,
-      data: posts
+      data: {...posts,datas: newPosts}
     });
+ 
   } catch (error) {
     next(error)
   }
@@ -41,7 +66,7 @@ export const getPosts = async (req: Request, res: Response, next: NextFunction):
 
 export const selfPosts = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { pageNO } = req.query;
+    const { pageNo } = req.query;
     const myCustomLabels = {
       totalDocs: 'total',
       docs: 'datas',
@@ -55,17 +80,19 @@ export const selfPosts = async (req: Request, res: Response, next: NextFunction)
     };
 
     const options = {
-      page: +pageNO,
-      limit: 10,
-      customLabels: myCustomLabels
+      page: +pageNo || 0,
+      limit: 30,
+      customLabels: myCustomLabels,
     };
     const user = req.currentUser as IUserDocument;
 
     const posts = await Post.paginate({user: user.id},options);
+
     res.json({
       success: true,
       data: posts
     });
+
   } catch (error) {
     next(error)
   }
@@ -97,7 +124,7 @@ export const getPost = async (req: Request, res: Response, next: NextFunction): 
       ...resPost.author,
       totalReads,
       totalLikes: totalLikes.length
-    }
+    };
 
     res.json({
       success: true,
