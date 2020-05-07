@@ -19,6 +19,8 @@ export interface IPostDocument extends Document {
   tags: string[];
   author: IUserDocument['_id'],
   read: number,
+  comments?: number,
+  likes?: number,
   createdAt?: Date,
   updateAt?: Date
 };
