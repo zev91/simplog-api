@@ -10,7 +10,8 @@ import * as sendMailController from './controllers/sendMail';
 import * as fileController from './controllers/file';
 import * as likePostController from './controllers/likePost';
 import * as collectionController from './controllers/collection';
-import * as folloowController from './controllers/follow';
+import * as followController from './controllers/follow';
+import * as activityController from './controllers/activity';
 
 import errorMiddleeare from './middlewares/error.middleware';
 import checkAuthMiddleware from './middlewares/check-auth.middleware';
@@ -39,6 +40,7 @@ app.get('/',(_req: Request, res: Response) => {
 app.post('/api/user/register', userController.postRegister);
 app.post('/api/user/login', userController.postLogin);
 app.get('/api/userinfo',userController.getUserInfo);
+app.get('/api/getOtherUserInfo/:userId',userController.getOtherUserInfo);
 
 app.get('/api/posts',postController.getPosts);
 app.post('/api/createPost',checkAuthMiddleware,postController.createPost);
@@ -51,7 +53,9 @@ app.route('/api/posts/:id')
 
 app.get('/api/getEditPost/:id',checkAuthMiddleware,postController.getEditPost);
 
-app.get('/api/posts-self',checkAuthMiddleware,postController.selfPosts);
+app.get('/api/userPosts/:id',postController.userPosts);
+
+app.get('/api/getActivites/:userId',activityController.getActivity);
 
 app.post('/api/likePost/:id',checkAuthMiddleware,likePostController.changeLike);
 app.get('/api/getPostLikers/:id',likePostController.getPostLikers);
@@ -59,9 +63,9 @@ app.get('/api/getPostLikers/:id',likePostController.getPostLikers);
 app.post('/api/collectionPost/:id',checkAuthMiddleware,collectionController.changeCollection);
 app.get('/api/hasCollectioned/:id',collectionController.hasCollectioned);
 
-app.post('/api/follow/:userId',checkAuthMiddleware,folloowController.changeFollow);
-app.get('/api/hasFollowedAuthor/:postId',folloowController.hasFollowedAuther);
-app.get('/api/hasFollowedUser/:userId',folloowController.hasFollowedUser);
+app.post('/api/follow/:userId',checkAuthMiddleware,followController.changeFollow);
+app.get('/api/hasFollowedAuthor/:postId',followController.hasFollowedAuther);
+app.get('/api/hasFollowedUser/:userId',followController.hasFollowedUser);
 
 app.get('/api/posts/:id/comment',commentController.getComment);
 app.post('/api/posts/:id/comment',checkAuthMiddleware,commentController.createComment);

@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import Follow from '../models/Follow';
 import Post from '../models/Post';
 import User, { IUserDocument } from '../models/User';
+import Activity, { ActiveType } from '../models/Activity';
 import jwt from 'jsonwebtoken';
 import { JwtPayload } from '../types/Jwt';
 import { throwPostNotFound } from '../utils/throwError';
@@ -16,13 +17,15 @@ export const changeFollow = async (req: Request, res: Response, next: NextFuncti
 
     if(follow){
       await Follow.findByIdAndDelete(follow.id);
+      await Activity.findOneAndDelete({user: userId,followAuthor:userId})
     }else{
       const newFollow= new Follow({
         followFrom: user._id, 
         followTo:userId
-
       });
       await newFollow.save();
+      const newActivity = new Activity({user: userId, activeType: ActiveType.FOLLOW,followAuthor:userId});
+      await newActivity.save();
     }
 
     res.json({
