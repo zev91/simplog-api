@@ -8,3 +8,7 @@ export const throwPostNotFound = () => {
 export const throwCommentNotFound = () => {
   throw new HttpException(NOT_FOUND, '请求不存在 !');
 }
+
+export const throwUserNotFound = () => {
+  throw new HttpException(NOT_FOUND, '请求不存在 !');
+}

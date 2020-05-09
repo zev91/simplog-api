@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import Post from '../models/Post';
 import Collection from '../models/Collection';
 import User, { IUserDocument } from '../models/User';
+import Activity, { ActiveType } from '../models/Activity';
 import { throwPostNotFound } from '../utils/throwError';
 import jwt from 'jsonwebtoken';
 import { JwtPayload } from '../types/Jwt';
@@ -18,6 +19,7 @@ export const changeCollection = async (req: Request, res: Response, next: NextFu
 
     if(collection){
       await Collection.findByIdAndDelete(collection.id);
+      await Activity.findOneAndDelete({user: user._id,collectionPost:id})
     }else{
       const newCollection= new Collection({
         user: user._id,
@@ -25,6 +27,8 @@ export const changeCollection = async (req: Request, res: Response, next: NextFu
 
       });
       await newCollection.save();
+      const newActivity = new Activity({user: user._id, activeType: ActiveType.COLLECTION_POST, collectionPost:id});
+      await newActivity.save();
     }
 
     res.json({

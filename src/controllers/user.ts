@@ -7,6 +7,9 @@ import VerifyCode from '../models/VerifyCode';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { JwtPayload } from '../types/Jwt';
+import LikePost, { ILikePost } from '../models/LikePost';
+import Follow from '../models/Follow';
+import Post from '../models/Post';
 
 const throwLoginValidateError = (errors: LoginInputError) => {
   throw new HttpException(UNPROCESSABLE_ENTITY, 'User login input error', errors);
@@ -97,7 +100,7 @@ export const getUserInfo = async (req: Request, res: Response, next: NextFunctio
       await jwt.verify(token, process.env.JWT_SECRET_KEY!, async (_err,data) => {
         const jwtData = data as JwtPayload
         if(data){
-          user = await User.findById(jwtData.id)
+          user = await User.findById(jwtData.id,['avatar','jobTitle','company','selfDescription','_id','username','email'])
         }
       }) 
     }
@@ -106,6 +109,35 @@ export const getUserInfo = async (req: Request, res: Response, next: NextFunctio
       success: true,
       data: {
         user: user || {}
+      }
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const getOtherUserInfo = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { userId } = req.params;
+    const totalPosts = await Post.find({author: userId});
+    const totalFollowTo = await Follow.find({followTo: userId});
+    const totalFollowFrom= await Follow.find({followFrom: userId});
+    const totalReads = totalPosts.reduce((cur,nex) => cur+nex!.read,0);
+
+    let user = await User.findById(userId,['avatar','jobTitle','company','selfDescription','_id','username','createdAt']);
+    let totalLikes: ILikePost[] = [];
+
+    const calculateLikes = totalPosts.map(async post => {
+      const likes = await LikePost.find({post:post._id});
+      totalLikes = [...totalLikes,...likes];
+    });
+    
+    await Promise.all(calculateLikes);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        user: {...user!._doc,totalReads,totalLikes:totalLikes.length,totalFollowTo,totalFollowFrom} 
       }
     })
   } catch (error) {

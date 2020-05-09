@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import Post from '../models/Post';
 import { IUserDocument } from '../models/User';
-
 import { checkBody } from '../utils/validator';
 import { throwPostNotFound, throwCommentNotFound } from '../utils/throwError';
 import Comment, { IComments } from '../models/Comment';
+import Activity, { ActiveType } from '../models/Activity';
 import HttpException from '../exceptions/HttpException';
 import { UNAUTHORIZED, NOT_FOUND } from 'http-status-codes';
 
@@ -46,6 +46,8 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
     const newComment = new Comment(commentContents);
     await newComment.save();
 
+    const newActivity = new Activity({user: userId, activeType: ActiveType.COMMENT,addComment: newComment._id});
+    await newActivity.save();
 
     res.json({
       success: true,
@@ -55,8 +57,6 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
     next(error)
   }
 };
-
-
 
 export const getComment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -94,6 +94,8 @@ export const deleteComment = async (req: Request, res: Response, next: NextFunct
     }
 
     await Comment.findByIdAndDelete(commentId);
+
+    await Activity.findOneAndDelete({user: userId,addComment: commentId})
     res.json({
       success: true,
       data: { message: '删除成功！' }

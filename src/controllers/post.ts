@@ -3,12 +3,13 @@ import { UNAUTHORIZED } from 'http-status-codes';
 import { v4 as uuidv4 } from 'uuid';
 import Post, { PostStatus, IPostDocument } from '../models/Post';
 import LikePost, { ILikePost } from '../models/LikePost';
-// import LikePost from './models/LikePost';
 import HttpException from '../exceptions/HttpException';
-import { IUserDocument } from '../models/User';
+import User, { IUserDocument } from '../models/User';
 import { checkPostContent } from '../utils/validator';
-import { throwPostNotFound } from '../utils/throwError';
+import { throwPostNotFound, throwUserNotFound } from '../utils/throwError';
 import Comment from '../models/Comment';
+import Activity, { ActiveType } from '../models/Activity';
+import { getMainBody } from '../utils/helper';
 
 export const getPosts = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -59,19 +60,22 @@ export const getPosts = async (req: Request, res: Response, next: NextFunction):
       data: {...posts,datas: newPosts}
     });
  
+    next('sdsd');
   } catch (error) {
     next(error)
   }
 };
 
-export const selfPosts = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const userPosts = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
+    const { id } = req.params;
     const { pageNo } = req.query;
     const myCustomLabels = {
       totalDocs: 'total',
       docs: 'datas',
       limit: 'pageSize',
       page: 'currentPage',
+
       // nextPage: false,
       // prevPage: false,
       totalPages: 'pageCount',
@@ -80,17 +84,40 @@ export const selfPosts = async (req: Request, res: Response, next: NextFunction)
     };
 
     const options = {
-      page: +pageNo || 0,
-      limit: 30,
+      page: +pageNo || 1,
+      limit: 15,
+      lean:true,
+      sort: { createdAt:-1 },
       customLabels: myCustomLabels,
+      populate: {
+        path: 'author',
+        select: '_id username avatar'
+      }
     };
-    const user = req.currentUser as IUserDocument;
+    const user = await User.findById(id);
 
-    const posts = await Post.paginate({user: user.id},options);
+    if(!user) throwUserNotFound();
 
+    const posts = await Post.paginate({author: id},options);
+
+    let datas = posts.datas as IPostDocument[];
+
+    const fillPosts =  datas.map(async (post:IPostDocument) => {
+      const likes = await LikePost.find({post:post._id});
+      const comments = await Comment.find({post:post._id});
+      return ({
+        ...post,
+        likes: likes.length,
+        comments: comments.length,
+        main: getMainBody(post.body)
+      })
+    });
+
+
+    const newPosts = await Promise.all(fillPosts);
     res.json({
       success: true,
-      data: posts
+      data: {...posts,datas: newPosts}
     });
 
   } catch (error) {
@@ -105,7 +132,6 @@ export const getPost = async (req: Request, res: Response, next: NextFunction): 
 
     const post:IPostDocument | null = await Post.findById(id).populate('author','_id username avatar jobTitle selfDescription');
     if (!post) throwPostNotFound(); 
-
     await Post.findByIdAndUpdate(id,{read:post!.read+1});
     const totalPosts = await Post.find({author: post!.author});
     const totalReads = totalPosts.reduce((cur,nex) => cur+nex!.read,0);
@@ -267,6 +293,8 @@ export const publishPost = async (req: Request, res: Response, next: NextFunctio
 
     checkPostContent(body,title, category, tags);
     if(post!.status === 'DRAFT'){
+      const newActivity = new Activity({user: userId, activeType: ActiveType.PUBLISH,publish:id});
+      await newActivity.save();
       await Post.findByIdAndUpdate(id, { status: 'PUBLISHED' }, { new: true });
     }else{
       const rePublishPost = await Post.findOne({postId: post!.postId, status: PostStatus.RE_EDITOR});
@@ -302,6 +330,8 @@ export const deletePost = async (req: Request, res: Response, next: NextFunction
     if (''+post!.author !== ''+userId) throw new HttpException(UNAUTHORIZED, '操作不允许！'); //文章的作者和当前用户是否为同一个
 
     await Post.findByIdAndDelete(id);
+
+    await Activity.findOneAndDelete({user: userId,publish:id})
     res.json({
       success: true,
       data: { message: '删除成功！' }
