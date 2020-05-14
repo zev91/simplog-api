@@ -1,19 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import path from 'path';
-import OSS from 'ali-oss';
-
-let client = new OSS({
-  region: 'oss-cn-beijing',
-  //云账号AccessKey有所有API访问权限，建议遵循阿里云安全最佳实践，部署在服务端使用RAM子账号或STS，部署在客户端使用STS。
-  accessKeyId: 'LTAI9jgyI9dOpvMR',
-  accessKeySecret: 'KzoUiohQDhSH8iwnEMvge8mi26TR1A',
-  bucket: 'simplog'
-});
+import { IUserDocument } from '../models/User';
+import Post, { PostStatus } from '../models/Post';
+import PostImage from '../models/PostImage';
+import client from '../utils/fileClient';
+import { getImageName } from '../utils/helper';
+import { throwPostNotFound } from '../utils/throwError';
+import HttpException from '../exceptions/HttpException';
+import { UNAUTHORIZED } from 'http-status-codes';
 
 export const uploadPic = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
+    const user = req.currentUser as IUserDocument;
+
     let { imageType } = req.params;
+    let { postId } =req.body;
     let filePath =  req.file.path;                                                     
     let temp = req.file.originalname.split('.');
     let fileType = temp[temp.length - 1];
@@ -30,12 +32,32 @@ export const uploadPic = async (req: Request, res: Response, next: NextFunction)
           data: { message: '写入文件失败！'}
         });
       }else{
-        console.log('before upload===>>>')
-        const result = await client.put(imageType + '/'+fileName,newfilepath);
-        console.log('after aliyun  upload===>>>')
+        const result = await client.put('users/'+user._id+'/'+imageType + '/'+fileName,newfilepath);
         const { url, name } = result;
         fs.unlinkSync(newfilepath);
-        console.log('after upload===>>>')
+
+        if(imageType === 'avatar'){
+          const reg = RegExp('users/'+user._id+'/'+imageType);
+          if(reg.test(user.avatar)){
+            await client.delete(getImageName(user.avatar));
+          };
+        };
+        if(imageType === 'post'){
+          const post = await Post.findById(postId);
+          if (!post) throwPostNotFound(); 
+          if(post!.author+'' !== user._id+'') throw new HttpException(UNAUTHORIZED, '操作不允许！'); 
+          const realPost = post!.status === PostStatus.PUBLISHED ? await Post.findOne({postId: post!.postId,status: PostStatus.RE_EDITOR}) : post;
+          const lastPostImage = await PostImage.findOne({postId:realPost!._id});
+
+          if(!lastPostImage){
+            const newImgList = new PostImage({postId:realPost!._id,imageList:[name]});
+            await newImgList.save();
+          }else{
+            await PostImage.findByIdAndUpdate(lastPostImage._id,{imageList:[...lastPostImage.imageList,name]})
+          }
+        
+        };
+
         res.json({
           success: true,
           data: { message: '上传成功！', url, name}
@@ -46,4 +68,12 @@ export const uploadPic = async (req: Request, res: Response, next: NextFunction)
     next(error);
   }
 };
+
+// export const deletdPic = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+//   try{
+
+//   }catch(error){
+//     next(error);
+//   }
+// }
 

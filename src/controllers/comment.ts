@@ -64,10 +64,10 @@ export const getComment = async (req: Request, res: Response, next: NextFunction
     const post = await Post.findById(id);
     if(!post) throwPostNotFound(); 
 
-    let comments = await Comment.find({"parentId": null, "post": post!._id}).sort({createdAt: -1}).populate('fromUser','_id username');
+    let comments = await Comment.find({"parentId": null, "post": post!._id}).sort({createdAt: -1}).populate('fromUser','_id username avatar');
 
     for(let i = 0; i < comments.length; i++){
-      let children =  await Comment.find({"parentId": comments[i].id, "post": post!._id}).sort({createdAt: -1}).populate('fromUser','_id username').populate('replyToUser','_id username');
+      let children =  await Comment.find({"parentId": comments[i].id, "post": post!._id}).sort({createdAt: -1}).populate('fromUser','_id username avatar').populate('replyToUser','_id username avatar');
       comments[i]['children'] = children;
     }
     res.json({
@@ -83,11 +83,20 @@ export const deleteComment = async (req: Request, res: Response, next: NextFunct
   try {
     const { commentId } = req.params;
     const userId:IUserDocument['_id'] | undefined = req.currentUser!._id;
-    const comment = await Comment.findById(commentId);
+    const comment = await Comment.findById(commentId).populate({path: 'post'});
+    if (!comment) throw new HttpException(NOT_FOUND, '评论不存在！');
 
-    if (!comment) throw new HttpException(NOT_FOUND, '评论不存在！');;
+    const currentUser = userId+'';
+    const parentComment = await Comment.findById(comment.parentId);
+    const commentFromUser = comment.fromUser+'';
+    const commentPostAuthor = comment.post.author+'';
 
-    if (comment.fromUser+'' !== userId+'') throw new HttpException(UNAUTHORIZED, '操作不允许！'); //文章的作者和当前用户是否为同一个
+    let unauthorized:boolean = currentUser !== commentFromUser && currentUser !== commentPostAuthor;
+    if(parentComment){
+        unauthorized = currentUser !== parentComment.fromUser+''
+      }
+
+    if (unauthorized) throw new HttpException(UNAUTHORIZED, '操作不允许！'); //文章的作者和当前用户是否为同一个
   
     if(comment!.children!.length > 0){
       await Comment.deleteMany({parentId:commentId});

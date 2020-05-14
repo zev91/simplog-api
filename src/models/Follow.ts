@@ -1,10 +1,13 @@
-import { Schema, model, Document} from 'mongoose';
+import { Schema, model, Document, PaginateModel} from 'mongoose';
 import { IUserDocument } from './User';
+import mongoosePaginate from 'mongoose-paginate-v2';
 
 export interface IFollow extends Document{
   followFrom: IUserDocument['_id'];
   followTo: IUserDocument['_id'];
 }
+
+interface IFollowModel extends PaginateModel<IFollow> {};
 
 const FollowSchema: Schema = new Schema({
   followFrom: {
@@ -21,6 +24,8 @@ const FollowSchema: Schema = new Schema({
   timestamps: true
 });
 
-const Collection = model<IFollow>('Follow', FollowSchema);
+FollowSchema.plugin(mongoosePaginate);
+
+const Collection = model<IFollow,IFollowModel>('Follow', FollowSchema);
 
 export default Collection;

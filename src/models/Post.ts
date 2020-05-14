@@ -30,7 +30,10 @@ interface IPostModel extends PaginateModel<IPostDocument> {};
 const PostSchema: Schema = new Schema({
   postId: String,
   status: { type: String, enum: ['DRAFT','RE_EDITOR','PUBLISHED'] }, 
-  headerBg: String,
+  headerBg: {
+    type: String,
+    default: ''
+  },
   title: String,
   body: String,
   category: {
