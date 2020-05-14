@@ -1,11 +1,14 @@
-import { Schema, model, Document} from 'mongoose';
+import { Schema, model, Document, PaginateModel} from 'mongoose';
 import { IUserDocument } from './User';
 import { IPostDocument } from './Post';
+import mongoosePaginate from 'mongoose-paginate-v2';
 
 export interface ICollection extends Document{
   user: IUserDocument['_id'];
   post: IPostDocument['_id'];
 }
+
+interface ICollectionModel extends PaginateModel<ICollection> {};
 
 const CollectionSchema: Schema = new Schema({
   user: {
@@ -22,7 +25,8 @@ const CollectionSchema: Schema = new Schema({
 },{
   timestamps: true
 });
+CollectionSchema.plugin(mongoosePaginate);
 
-const Collection = model<ICollection>('Collection', CollectionSchema);
+const Collection = model<ICollection,ICollectionModel>('Collection', CollectionSchema);
 
 export default Collection;

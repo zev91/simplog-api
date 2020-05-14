@@ -9,6 +9,8 @@ enum Role {
   admin = 'admin'
 }
 export interface IUserDocument extends Document {
+  headerBg: string;
+  avatar: any;
   username: string,
   email: string,
   password: string,
@@ -37,7 +39,7 @@ const userSchema: Schema = new Schema({
   password: String,
   avatar: {
     type: String,
-    default: ''
+    default: 'https://simplog.oss-cn-beijing.aliyuncs.com/system/default-avatar.svg'
   },
   jobTitle: {
     type: String,

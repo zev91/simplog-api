@@ -27,6 +27,9 @@ export const getActivity = async (req: Request, res: Response, next: NextFunctio
       meta: 'page'
     };
 
+    const userPopulateSelect = '_id avatar username company jobTitle selfDescription';
+    const postPopulateSelect = '_id author headerBg body title postId read tags category createdAt';
+
     const options = {
       page: +pageNo || 1,
       limit: 15,
@@ -35,31 +38,37 @@ export const getActivity = async (req: Request, res: Response, next: NextFunctio
       customLabels: myCustomLabels,
       populate: [
         {
+          path: 'user',
+          select: userPopulateSelect
+        },
+        {
           path: 'publish',
-          select: '_id author headerBg body title postId read tags category',
-          populate: { path: 'author', select: '_id avatar username company jobTitle selfDescription' }
+          select: postPopulateSelect,
+          populate: { path: 'author', select: userPopulateSelect }
         },
         {
           path: 'collectionPost',
-          select: '_id author headerBg body title postId read tags category',
-          populate: { path: 'author', select: '_id avatar username company jobTitle selfDescription' }
+          select: postPopulateSelect,
+          populate: { path: 'author', select: userPopulateSelect }
         },
         {
           path: 'likePost',
-          select: '_id author headerBg body title postId read tags category',
-          populate: { path: 'author', select: '_id avatar username company jobTitle selfDescription' }
+          select: postPopulateSelect,
+          populate: { path: 'author', select: userPopulateSelect }
         },
         {
           path: 'addComment',
-          select: '_id post replyToUser',
+          select: '_id body post replyToUser',
           populate: [
-            { path: 'post', select: '_id author headerBg body title postId read tags category' },
-            { path: 'replyToUser', select: '_id avatar username company jobTitle selfDescription' },
+            { path: 'post', select: postPopulateSelect, populate: {
+              path: 'author', select: userPopulateSelect
+            } },
+            { path: 'replyToUser', select: userPopulateSelect },
           ]
         },
         {
           path: 'followAuthor',
-          select: '_id avatar username company jobTitle selfDescription'
+          select: userPopulateSelect
         }
       ]
     };

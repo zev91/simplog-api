@@ -116,6 +116,37 @@ export const getUserInfo = async (req: Request, res: Response, next: NextFunctio
   }
 }
 
+export const updateUserInfo = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const user = req.currentUser as IUserDocument;
+    const params = req.body;
+
+    if(params.username){
+      const existsUsername = await User.findOne({id:{$ne: user._id},username:params.username});
+
+      if(existsUsername){
+        res.json({
+          success: false,
+          data: {
+            message: '该用户名已存在'
+          }
+        });
+        return;
+      }
+    }
+
+    await User.findByIdAndUpdate(user._id,{...params});
+    res.json({
+      success: true,
+      data: {
+        message: '更新成功'
+      }
+    });
+  }catch(error){
+    next(error)
+  }
+}
+
 export const getOtherUserInfo = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { userId } = req.params;

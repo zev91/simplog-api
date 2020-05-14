@@ -40,6 +40,7 @@ app.get('/',(_req: Request, res: Response) => {
 app.post('/api/user/register', userController.postRegister);
 app.post('/api/user/login', userController.postLogin);
 app.get('/api/userinfo',userController.getUserInfo);
+app.put('/api/userinfo',checkAuthMiddleware,userController.updateUserInfo);
 app.get('/api/getOtherUserInfo/:userId',userController.getOtherUserInfo);
 
 app.get('/api/posts',postController.getPosts);
@@ -54,6 +55,7 @@ app.route('/api/posts/:id')
 app.get('/api/getEditPost/:id',checkAuthMiddleware,postController.getEditPost);
 
 app.get('/api/userPosts/:id',postController.userPosts);
+app.get('/api/getDraftLists',checkAuthMiddleware,postController.getDraftLists);
 
 app.get('/api/getActivites/:userId',activityController.getActivity);
 
@@ -62,10 +64,12 @@ app.get('/api/getPostLikers/:id',likePostController.getPostLikers);
 
 app.post('/api/collectionPost/:id',checkAuthMiddleware,collectionController.changeCollection);
 app.get('/api/hasCollectioned/:id',collectionController.hasCollectioned);
+app.get('/api/getUserCollections/:userId',collectionController.getUserCollections);
 
 app.post('/api/follow/:userId',checkAuthMiddleware,followController.changeFollow);
 app.get('/api/hasFollowedAuthor/:postId',followController.hasFollowedAuther);
 app.get('/api/hasFollowedUser/:userId',followController.hasFollowedUser);
+app.get('/api/getFollowedUsers/:userId',followController.getFollowedUsers);
 
 app.get('/api/posts/:id/comment',commentController.getComment);
 app.post('/api/posts/:id/comment',checkAuthMiddleware,commentController.createComment);
@@ -73,7 +77,7 @@ app.post('/api/deleteComment/:commentId',checkAuthMiddleware,commentController.d
 
 app.post('/api/email',sendMailController.sendMail);
 
-app.post('/api/upload/:imageType',uploadCreater(),fileController.uploadPic);
+app.post('/api/upload/:imageType',checkAuthMiddleware, uploadCreater(),fileController.uploadPic);
 
 app.use((_req: Request, _res: Response, next:NextFunction) => {
   const error: HttpException = new HttpException(NOT_FOUND, 'Router Not Found');

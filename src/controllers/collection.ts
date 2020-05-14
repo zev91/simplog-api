@@ -5,8 +5,11 @@ import Collection from '../models/Collection';
 import User, { IUserDocument } from '../models/User';
 import Activity, { ActiveType } from '../models/Activity';
 import { throwPostNotFound } from '../utils/throwError';
+import { getMainBody } from '../utils/helper';
 import jwt from 'jsonwebtoken';
 import { JwtPayload } from '../types/Jwt';
+
+console.log( process.env)
 
 export const changeCollection = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -71,5 +74,56 @@ export const hasCollectioned = async (req: Request, res: Response, next: NextFun
     }
   } catch (error) {
     next(error);
+  }
+}
+
+export const getUserCollections = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { userId } = req.params;
+    const { pageNo } = req.query;
+    const myCustomLabels = {
+      totalDocs: 'total',
+      docs: 'datas',
+      limit: 'pageSize',
+      page: 'currentPage',
+
+      // nextPage: false,
+      // prevPage: false,
+      totalPages: 'pageCount',
+      pagingCounter: false,
+      meta: 'page'
+    };
+
+    const options = {
+      page: +pageNo || 1,
+      limit: 15,
+      lean:true,
+      sort: { createdAt:-1 },
+      customLabels: myCustomLabels,
+      populate: {
+        path: 'post',
+        select: '_id author headerBg body title postId read tags category createdAt',
+        populate: {
+          path: 'author',
+          select: '_id avatar username company jobTitle selfDescription'
+        }
+      }
+    };
+
+    const collections = await Collection.paginate({ user: userId }, options);
+    const newCollections = JSON.parse(JSON.stringify(collections));
+    
+    newCollections.datas = newCollections.datas.map((data:any) => ({
+      ...data,
+      post: Object.assign(data.post,{main:getMainBody(data.post.body)})
+    }));
+
+    res.json({
+      success: true,
+      data: newCollections
+    });
+
+  } catch (error) {
+    next(error)
   }
 }

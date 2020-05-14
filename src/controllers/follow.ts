@@ -6,7 +6,7 @@ import User, { IUserDocument } from '../models/User';
 import Activity, { ActiveType } from '../models/Activity';
 import jwt from 'jsonwebtoken';
 import { JwtPayload } from '../types/Jwt';
-import { throwPostNotFound } from '../utils/throwError';
+import { throwPostNotFound, throwUserNotFound } from '../utils/throwError';
 
 export const changeFollow = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -17,14 +17,14 @@ export const changeFollow = async (req: Request, res: Response, next: NextFuncti
 
     if(follow){
       await Follow.findByIdAndDelete(follow.id);
-      await Activity.findOneAndDelete({user: userId,followAuthor:userId})
+      await Activity.findOneAndDelete({user: user._id,followAuthor:userId})
     }else{
       const newFollow= new Follow({
         followFrom: user._id, 
         followTo:userId
       });
       await newFollow.save();
-      const newActivity = new Activity({user: userId, activeType: ActiveType.FOLLOW,followAuthor:userId});
+      const newActivity = new Activity({user: user._id, activeType: ActiveType.FOLLOW,followAuthor:userId});
       await newActivity.save();
     }
 
@@ -101,5 +101,68 @@ export const hasFollowedUser = async (req: Request, res: Response, next: NextFun
     }
   } catch (error) {
     next(error);
+  }
+}
+
+
+export const getFollowedUsers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  enum followEnum {
+    FOLLOW_TO = "FOLLOW_TO",
+    FOLLOW_FROM = "FOLLOW_FROM"
+  }
+  try {
+    const { userId } = req.params;
+    const { followType, pageNo } = req.query;
+    const myCustomLabels = {
+      totalDocs: 'total',
+      docs: 'datas',
+      limit: 'pageSize',
+      page: 'currentPage',
+
+      // nextPage: false,
+      // prevPage: false,
+      totalPages: 'pageCount',
+      pagingCounter: false,
+      meta: 'page'
+    };
+
+    const options = {
+      page: +pageNo || 1,
+      limit: 15,
+      lean:true,
+      sort: { createdAt:-1 },
+      customLabels: myCustomLabels,
+      populate: [
+        {
+          path: 'followFrom',
+          select: '_id username avatar jobTitle'
+        },
+        {
+          path: 'followTo',
+          select: '_id username avatar jobTitle'
+        }
+      ]
+    };
+    const user = await User.findById(userId);
+
+    if(!user) throwUserNotFound();
+
+    const typeKey = followType === followEnum.FOLLOW_FROM ? 'followTo' : 'followFrom'
+    const follows = await Follow.paginate({[typeKey]: userId},options);
+
+    const newFollows = JSON.parse(JSON.stringify(follows));
+
+    newFollows.datas = newFollows.datas.map((data:any) => ({
+      ...data,
+      user: followType === followEnum.FOLLOW_FROM ? data.followFrom : data.followTo
+    }))
+    
+    res.json({
+      success: true,
+      data: newFollows
+    });
+
+  } catch (error) {
+    next(error)
   }
 }
