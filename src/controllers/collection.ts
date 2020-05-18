@@ -9,8 +9,6 @@ import { getMainBody } from '../utils/helper';
 import jwt from 'jsonwebtoken';
 import { JwtPayload } from '../types/Jwt';
 
-console.log( process.env)
-
 export const changeCollection = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;

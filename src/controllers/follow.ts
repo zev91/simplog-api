@@ -56,8 +56,6 @@ export const hasFollowedAuther = async (req: Request, res: Response, next: NextF
 
     if(user){
       let follow = await Follow.findOne({followFrom: user!._id, followTo:post!.author});
-
-      console.log()
       res.json({
         success: true,
         data: { hasFollowed: !!follow}
