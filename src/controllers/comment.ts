@@ -97,20 +97,26 @@ export const deleteComment = async (req: Request, res: Response, next: NextFunct
       }
 
     if (unauthorized) throw new HttpException(UNAUTHORIZED, '操作不允许！'); //文章的作者和当前用户是否为同一个
-  
-    if(comment!.children!.length > 0){
-      await Comment.deleteMany({parentId:commentId});
+
+    const childrenComments = await Comment.find({parentId:commentId});
+
+    if(childrenComments.length){
+      for(let i = 0; i < childrenComments.length; i++){
+        await Activity.findOneAndDelete({addComment: childrenComments[i]._id});
+      }
     }
+
+    await Comment.deleteMany({parentId:commentId});
 
     await Comment.findByIdAndDelete(commentId);
 
-    await Activity.findOneAndDelete({user: userId,addComment: commentId})
+    await Activity.findOneAndDelete({addComment: commentId});
+
     res.json({
       success: true,
       data: { message: '删除成功！' }
     });
   } catch (error) {
-    console.log(error)
     next(error);
   }
 };

@@ -265,9 +265,8 @@ export const updatePost = async (req: Request, res: Response, next: NextFunction
     const post = await Post.findById(id);
     const userId:IUserDocument['_id'] | undefined = req.currentUser!._id;
 
-    const deleteImg = (error:any, data:IPostDocument|null) => {
+    const deleteImg = (_error:any, data:IPostDocument|null) => {
 
-      console.log(error,data)
       if(data!.headerBg && !headerBg){
         client.delete(getImageName(data!.headerBg));
       };
