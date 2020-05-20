@@ -20,8 +20,8 @@ export const getActivity = async (req: Request, res: Response, next: NextFunctio
       docs: 'datas',
       limit: 'pageSize',
       page: 'currentPage',
-      // nextPage: false,
-      // prevPage: false,
+      nextPage: 'nextPage',
+      prevPage: 'prevPage',
       totalPages: 'pageCount',
       pagingCounter: false,
       meta: 'page'

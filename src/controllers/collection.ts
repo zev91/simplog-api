@@ -85,8 +85,8 @@ export const getUserCollections = async (req: Request, res: Response, next: Next
       limit: 'pageSize',
       page: 'currentPage',
 
-      // nextPage: false,
-      // prevPage: false,
+      nextPage: 'nextPage',
+      prevPage: 'prevPage',
       totalPages: 'pageCount',
       pagingCounter: false,
       meta: 'page'
