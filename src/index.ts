@@ -3,9 +3,9 @@ import mongoose from 'mongoose';
 import { NOT_FOUND } from 'http-status-codes'
 import HttpException from './exceptions/HttpException';
 
-import * as userController from './controllers/User';
-import * as postController from './controllers/Post';
-import * as commentController from './controllers/Comment';
+import * as userController from './controllers/user';
+import * as postController from './controllers/post';
+import * as commentController from './controllers/comment';
 import * as sendMailController from './controllers/sendMail';
 import * as fileController from './controllers/file';
 import * as likePostController from './controllers/likePost';
