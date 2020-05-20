@@ -339,7 +339,7 @@ export const publishPost = async (req: Request, res: Response, next: NextFunctio
     if(post!.status === 'DRAFT'){
       const newActivity = new Activity({user: userId, activeType: ActiveType.PUBLISH,publish:id});
       await newActivity.save();
-      await Post.findByIdAndUpdate(id, { status: 'PUBLISHED' }, { new: true });
+      await Post.findByIdAndUpdate(id, { status: PostStatus.PUBLISHED }, { new: true });
     }else{
       const rePublishPost = await Post.findOne({postId: post!.postId, status: PostStatus.RE_EDITOR});
       const { 
