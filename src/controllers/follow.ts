@@ -117,8 +117,8 @@ export const getFollowedUsers = async (req: Request, res: Response, next: NextFu
       limit: 'pageSize',
       page: 'currentPage',
 
-      // nextPage: false,
-      // prevPage: false,
+      nextPage: 'nextPage',
+      prevPage: 'prevPage',
       totalPages: 'pageCount',
       pagingCounter: false,
       meta: 'page'

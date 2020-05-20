@@ -24,8 +24,8 @@ export const getPosts = async (req: Request, res: Response, next: NextFunction):
       docs: 'datas',
       limit: 'pageSize',
       page: 'currentPage',
-      // nextPage: false,
-      // prevPage: false,
+      nextPage: 'nextPage',
+      prevPage: 'prevPage',
       totalPages: 'pageCount',
       pagingCounter: false,
       meta: 'page'
@@ -78,8 +78,8 @@ export const userPosts = async (req: Request, res: Response, next: NextFunction)
       limit: 'pageSize',
       page: 'currentPage',
 
-      // nextPage: false,
-      // prevPage: false,
+      nextPage: 'nextPage',
+      prevPage: 'prevPage',
       totalPages: 'pageCount',
       pagingCounter: false,
       meta: 'page'
@@ -460,8 +460,8 @@ export const getDraftLists = async (req: Request, res: Response, next: NextFunct
       limit: 'pageSize',
       page: 'currentPage',
 
-      // nextPage: false,
-      // prevPage: false,
+      nextPage: 'nextPage',
+      prevPage: 'prevPage',
       totalPages: 'pageCount',
       pagingCounter: false,
       meta: 'page'
