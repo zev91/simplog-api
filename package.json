@@ -4,9 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
-    "start": "ts-node-dev --respawn src/index.ts",
-    "dev": "nodemon --exec ts-node --files src/index.ts"
+    "build": "NODE_ENV=production tsc",
+    "start": "NODE_ENV=development ts-node-dev --respawn src/index.ts",
+    "dev": "NODE_ENV=development nodemon --exec ts-node --files src/index.ts"
   },
   "dependencies": {
     "ali-oss": "^6.6.0",

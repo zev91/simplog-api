@@ -39,7 +39,7 @@ const userSchema: Schema = new Schema({
   password: String,
   avatar: {
     type: String,
-    default: 'https://simplog.oss-cn-beijing.aliyuncs.com/system/default-avatar.svg'
+    default: 'https://simplog.oss-cn-beijing.aliyuncs.com/system/default-avatar.png'
   },
   jobTitle: {
     type: String,
