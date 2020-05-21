@@ -89,10 +89,16 @@ app.use(errorMiddleeare);
 const main = () => {
   mongoose.set('useFindAndModify',false);
   mongoose.set('useCreateIndex', true) ;
-  mongoose.connect('mongodb://localhost/test',{
+  mongoose.connect('mongodb://blog:zhuwei589753blog@127.0.0.1:27017/blog',{
     useNewUrlParser: true,
     useUnifiedTopology: true
-  });
+  },err => {
+  if(err){
+   console.log('出错---------->', err)
+}else{
+ console.log('链接成功')
+}
+});
   app.listen(port,()=> {
     console.log(`Running on http://localhost:${port}`);
   });
