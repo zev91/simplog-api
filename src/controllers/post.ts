@@ -62,7 +62,6 @@ export const getPosts = async (req: Request, res: Response, next: NextFunction):
       data: {...posts,datas: newPosts}
     });
  
-    next('sdsd');
   } catch (error) {
     next(error)
   }

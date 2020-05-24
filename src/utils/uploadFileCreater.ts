@@ -19,7 +19,10 @@ export default () => {
     }
   });
   let upload = multer({
-    storage: storage
+    storage: storage,
+    limits: {
+      fileSize: 5242880
+    }
   });
   
   return upload.single('images')

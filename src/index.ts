@@ -33,9 +33,6 @@ app.use(helmet());
 app.use(express.json());
 app.use(nocache());
 
-app.get('/', (_req: Request, res: Response) => {
-  res.send('hello world');
-});
 
 app.post('/api/user/register', userController.postRegister);
 app.post('/api/user/login', userController.postLogin);

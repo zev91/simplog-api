@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { UNPROCESSABLE_ENTITY } from 'http-status-codes'
+import { UNPROCESSABLE_ENTITY, INTERNAL_SERVER_ERROR } from 'http-status-codes'
 import HttpException from '../exceptions/HttpException';
 import { checkEmail } from '../utils/validator';
 import User  from '../models/User';
@@ -17,7 +17,7 @@ export const sendMail = async (req: Request, res: Response, next: NextFunction):
     const user = await User.findOne({ email });
 
     if (user) {
-      throw new HttpException(UNPROCESSABLE_ENTITY, '此邮箱已被注册');;
+      throw new HttpException(UNPROCESSABLE_ENTITY, '此邮箱已被注册');
     };
 
     const code = Math.random().toString(36).slice(-6);
@@ -28,8 +28,8 @@ export const sendMail = async (req: Request, res: Response, next: NextFunction):
       secure: true, // 使用 SSL
       port: 465, // SMTP 端口
       auth: {
-        user: "simplog@qq.com", // 账号   你自定义的域名邮箱账号
-        pass: "zlhrjhclxrwebdbj" // 密码   你自己开启SMPT获取的密码
+        user: process.env.MAIL_USER, // 账号   你自定义的域名邮箱账号
+        pass: process.env.MAIL_PASS // 密码   你自己开启SMPT获取的密码
       }
     }));
 
@@ -42,19 +42,29 @@ export const sendMail = async (req: Request, res: Response, next: NextFunction):
 
     transport.sendMail(mailOptions, async function (error, _response) {
       if (error) {
-        // console.log("fail: " + error);
-        // console.log("发送失败");
-        res.json({
-          success: false,
-          message: '发送失败'
-        });
+        const SendErrorInfo = JSON.parse(JSON.stringify(error));
+        const { response, responseCode } = SendErrorInfo;
+
+        res.status(INTERNAL_SERVER_ERROR);
+        if(responseCode === 550){
+          res.json({
+            success: false,
+            message: '此邮箱不存在，请检查后重试' 
+          });
+        }else{
+          res.json({
+            success: false,
+            message: response
+          });
+        }
       } else {
         const newVerifyCode = new VerifyCode({
           value: code,
           email,
           operation: CodeType.register
         });
-       await newVerifyCode.save();
+
+      await newVerifyCode.save();
         res.json({
           success: true,
           message: '发送成功'

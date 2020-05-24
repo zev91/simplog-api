@@ -69,11 +69,4 @@ export const uploadPic = async (req: Request, res: Response, next: NextFunction)
   }
 };
 
-// export const deletdPic = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-//   try{
-
-//   }catch(error){
-//     next(error);
-//   }
-// }
 

@@ -13,7 +13,7 @@ const VerifyCodeSchema: Schema = new Schema({
   value: { type: String, unique: true }, // 验证码值
   email: String,
   operation: { type: String, enum: ['register'] }, // 操作类型
-  createdAt: { type: Date, default: Date.now, index: { expires: 60 } }
+  createdAt: { type: Date, default: Date.now, index: { expires: 1800 } }
 });
 
 const VerifyCode = model<IVerifyCode>('VerifyCode', VerifyCodeSchema);
