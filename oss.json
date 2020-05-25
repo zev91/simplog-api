@@ -1,6 +1,0 @@
-{
-  "OSS_ACCESS_KEY_ID":"LTAI4GFzKX1rXsY3fYknDa1F",
-  "OSS_ACCESS_KEY_SECRET":"wapbFPh2AqdThQGQBtLvd8RHscTe8d",
-  "PROD_OSS_BUCKET": "simplog",
-  "DEV_OSS_BUCKET": "simplog-test"
-}
