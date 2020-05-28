@@ -22,7 +22,6 @@ import 'dotenv/config';
 
 import morgan from 'morgan';
 import helmet from 'helmet';
-import nocache from 'nocache';
 
 const app: Express = express();
 const port: any = process.env.PORT || 9999;
@@ -31,8 +30,6 @@ const port: any = process.env.PORT || 9999;
 app.use(morgan('dev'));
 app.use(helmet());
 app.use(express.json());
-app.use(nocache());
-
 
 app.post('/api/user/register', userController.postRegister);
 app.post('/api/user/login', userController.postLogin);
