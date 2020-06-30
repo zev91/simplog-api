@@ -7,5 +7,6 @@ export default new OSS({
   region: 'oss-cn-beijing',
   accessKeyId: config.OSS_ACCESS_KEY_ID!,
   accessKeySecret: config.OSS_ACCESS_KEY_SECRET!,
+  secure: config.SECURE!,
   bucket: bucket
 })

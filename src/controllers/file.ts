@@ -55,7 +55,6 @@ export const uploadPic = async (req: Request, res: Response, next: NextFunction)
           }else{
             await PostImage.findByIdAndUpdate(lastPostImage._id,{imageList:[...lastPostImage.imageList,name]})
           }
-        
         };
 
         res.json({

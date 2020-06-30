@@ -83,9 +83,7 @@ app.use(errorMiddleeare);
 const main = () => {
   mongoose.set('useFindAndModify', false);
   mongoose.set('useCreateIndex', true);
-  // mongoose.connect('mongodb://blog:zhuwei589753blog@47.101.136.35:27017/test-blog',{
   mongoose.connect(process.env.MONGODB_PATH!, {
-    // mongoose.connect('mongodb://localhost/test',{
     useNewUrlParser: true,
     useUnifiedTopology: true
   }, err => {
